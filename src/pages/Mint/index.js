@@ -112,13 +112,6 @@ const MintPage = () => {
     }
   };
 
-  const onTransfer = async () => {
-    if (transfer_address) {
-      setVisible(true);
-    } else {
-      toast("Please check address to transfer!");
-    }
-  };
   const onTransferNFT = async (contract_address, tokenID) => {
     const contract = new web3.eth.Contract(contractABI, contract_address);
     await contract.methods
@@ -142,7 +135,20 @@ const MintPage = () => {
       {currentAcc && currentAcc ? (
         nftdata.length > 0 ? (
           <BtnGroup>
-            <MintButton onClick={() => onTransfer()}>Transfer</MintButton>
+            <MintButton
+              onClick={() => {
+                if (Number(window.ethereum.chainId) === 1) {
+                  onTransferNFT(
+                    collectionData[0].asset_contract.address,
+                    collectionData[0].token_id
+                  );
+                } else {
+                  alert("Please connect to mainnet");
+                }
+              }}
+            >
+              Transfer
+            </MintButton>
           </BtnGroup>
         ) : (
           ""
