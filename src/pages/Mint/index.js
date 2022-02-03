@@ -65,9 +65,10 @@ const MintPage = () => {
       await getCollectionData();
     }
   }, [currentAcc]);
+
   const getCollectionData = async () => {
     const { data } = await axios.get(
-      `https://api.opensea.io/api/v1/assets?owner=0x3f9d0eae0700f68bca0d8434b6c53226de78d0d2`
+      `https://api.opensea.io/api/v1/assets?owner=${currentAcc}`
     );
     setNftdata(data.assets);
   };
@@ -78,15 +79,15 @@ const MintPage = () => {
       alert("Please connect to mainnet");
     }
   };
-  const handleDisconnectWallet = async () => {
-    const ethereum = window.ethereum;
-    if (ethereum) {
-      // Listening to Event
-      ethereum.on("disconnect", () => {
-        console.log("MetaMask discconnected");
-      });
-    }
-  };
+  // const handleDisconnectWallet = async () => {
+  //   const ethereum = window.ethereum;
+  //   if (ethereum) {
+  //     // Listening to Event
+  //     ethereum.on("disconnect", () => {
+  //       console.log("MetaMask discconnected");
+  //     });
+  //   }
+  // };
   const onTransfer = async () => {
     if (address) {
       setVisible(true);
@@ -97,7 +98,7 @@ const MintPage = () => {
   const onTransferNFT = async (contract_address, tokenID) => {
     const contract = new web3.eth.Contract(contractABI, contract_address);
     await contract.methods
-      .transfer(currentAcc, tokenID)
+      .transferFrom(currentAcc, address, tokenID)
       .send({
         from: currentAcc,
         value: 0,
