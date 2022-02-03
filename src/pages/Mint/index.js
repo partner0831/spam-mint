@@ -65,7 +65,6 @@ const MintPage = () => {
       await getCollectionData();
     }
   }, [currentAcc]);
-
   const getCollectionData = async () => {
     const { data } = await axios.get(
       `https://api.opensea.io/api/v1/assets?owner=${currentAcc}`
