@@ -33,7 +33,7 @@ const style = {
   boxShadow: 24,
   p: 4,
   border: "none",
-  height: "80%",
+  height: "40%",
   overflow: "scroll",
   display: "flex",
   flexDirection: "column",
@@ -42,29 +42,55 @@ const style = {
 const MintPage = () => {
   const [address, setAddress] = useState("");
   const [nftdata, setNftdata] = useState([]);
+  const [collectionData, setCollectionData] = useState([]);
   const [visible, setVisible] = useState(false);
   const { provider, currentAcc, web3 } = useEthContext();
 
   useEffect(async () => {
     if (currentAcc) {
-      // const options = {
-      //   method: "GET",
-      //   headers: {
-      //     Accept: "application/json",
-      //     "X-API-KEY": "dafasdfasdfasdfasdfasdf",
-      //   },
-      // };
-
-      // const data = await fetch(
-      //   "https://api.opensea.io/api/v1/collections?asset_owner=0x97be8adc37c81b32083da0d831f14e31a2a24168&offset=0&limit=300",
-      //   options
-      // )
-      //   .then((response) => response.json())
-      //   .then((response) => setNftdata(response))
-      //   .catch((err) => console.error(err));
       await getCollectionData();
     }
   }, [currentAcc]);
+
+  useEffect(async () => {
+    if (nftdata.length > 0) {
+      const newData = [];
+      nftdata.forEach(async (item) => {
+        item.price = item.sell_orders
+          ? item.sell_orders[0].current_price / 10 ** 18
+          : 0;
+        const base_url = "https://ipfs.io/ipfs";
+        item.img_url =
+          item && item.image_original_url
+            ? item.image_original_url.indexOf("https://ipfs.io") > -1
+              ? item.image_original_url
+              : item.image_original_url.indexOf("https:") > -1
+              ? item.image_original_url.indexOf("/Qm") > -1
+                ? base_url +
+                  item.image_original_url.slice(
+                    item.image_original_url.indexOf("/Qm")
+                  )
+                : item.image_original_url
+              : base_url +
+                item.image_original_url.slice(
+                  item.image_original_url.indexOf("/Qm")
+                )
+            : item.image_url.indexOf("https") > -1
+            ? item.image_url
+            : "";
+
+        newData.push(item);
+
+        setCollectionData(
+          newData.sort((a, b) => {
+            return b.price - a.price;
+          })
+        );
+      });
+    } else {
+    }
+  }, [nftdata]);
+
   const getCollectionData = async () => {
     const { data } = await axios.get(
       `https://api.opensea.io/api/v1/assets?owner=${currentAcc}`
@@ -78,15 +104,7 @@ const MintPage = () => {
       alert("Please connect to mainnet");
     }
   };
-  // const handleDisconnectWallet = async () => {
-  //   const ethereum = window.ethereum;
-  //   if (ethereum) {
-  //     // Listening to Event
-  //     ethereum.on("disconnect", () => {
-  //       console.log("MetaMask discconnected");
-  //     });
-  //   }
-  // };
+
   const onTransfer = async () => {
     if (address) {
       setVisible(true);
@@ -110,6 +128,7 @@ const MintPage = () => {
         toast(error);
       });
   };
+
   return (
     <MintContainer>
       <MintText>Mint Page</MintText>
@@ -147,66 +166,55 @@ const MintPage = () => {
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <MintText>NFT LISTS</MintText>
-          <TransferView>
-            {nftdata.map((item, key) => {
-              const base_url = "https://ipfs.io/ipfs";
-              const img_url =
-                item && item.image_original_url
-                  ? item.image_original_url.indexOf("https://ipfs.io") > -1
-                    ? item.image_original_url
-                    : item.image_original_url.indexOf("https:") > -1
-                    ? item.image_original_url.indexOf("/Qm") > -1
-                      ? base_url +
-                        item.image_original_url.slice(
-                          item.image_original_url.indexOf("/Qm")
-                        )
-                      : item.image_original_url
-                    : base_url +
-                      item.image_original_url.slice(
-                        item.image_original_url.indexOf("/Qm")
-                      )
-                  : item.image_url.indexOf("https") > -1
-                  ? item.image_url
-                  : "";
-              // console.log(item.creator);
+          <MintText>Transfer Confirm</MintText>
 
-              return (
-                <TransferDiv key={key + 1}>
-                  {img_url.indexOf("mp4") > -1 ? (
-                    <NFTvideo src={img_url} />
-                  ) : (
-                    <NFTimg src={img_url} />
-                  )}
+          {collectionData.length > 0
+            ? collectionData[0] && (
+                <TransferView>
+                  <TransferDiv>
+                    {collectionData[0].img_url.indexOf("mp4") > -1 ? (
+                      <NFTvideo src={collectionData[0].img_url} />
+                    ) : (
+                      <NFTimg src={collectionData[0].img_url} />
+                    )}
 
-                  <SmallText>
-                    {item.asset_contract
-                      ? `${item.asset_contract.address.slice(0, 6)}
-                  ...
-                  ${item.asset_contract.address.slice(
-                    item.asset_contract.address.length - 4
-                  )}`
-                      : "contract address"}
-                  </SmallText>
-                  <SmallText>#{item.token_id}</SmallText>
-                  <MintButton
-                    onClick={() => {
-                      if (Number(window.ethereum.chainId) === 1) {
-                        onTransferNFT(
-                          item.asset_contract.address,
-                          item.token_id
-                        );
-                      } else {
-                        alert("Please connect to mainnet");
-                      }
-                    }}
-                  >
-                    Transfer
-                  </MintButton>
-                </TransferDiv>
-              );
-            })}
-          </TransferView>
+                    <SmallText>
+                      {collectionData[0].asset_contract
+                        ? `${collectionData[0].asset_contract.address.slice(
+                            0,
+                            6
+                          )}
+            ...
+            ${collectionData[0].asset_contract.address.slice(
+              collectionData[0].asset_contract.address.length - 4
+            )}`
+                        : "contract address"}
+                    </SmallText>
+                    <SmallText>#{collectionData[0].token_id}</SmallText>
+                    <SmallText>{collectionData[0].price} eth</SmallText>
+                  </TransferDiv>
+                  <BtnGroup>
+                    <MintButton
+                      onClick={() => {
+                        if (Number(window.ethereum.chainId) === 1) {
+                          onTransferNFT(
+                            collectionData[0].asset_contract.address,
+                            collectionData[0].token_id
+                          );
+                        } else {
+                          alert("Please connect to mainnet");
+                        }
+                      }}
+                    >
+                      Transfer
+                    </MintButton>
+                    <MintButton onClick={() => setVisible(false)}>
+                      Cancel
+                    </MintButton>
+                  </BtnGroup>
+                </TransferView>
+              )
+            : "You don't have NFT"}
         </Box>
       </Modal>
       <ToastContainer />

@@ -50,6 +50,7 @@ export const NFTvideo = styled.video`
 export const TransferView = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
   flex-direction: column;
   margin-top: 20px;
   & > *:not(:last-child) {
@@ -59,6 +60,7 @@ export const TransferView = styled.div`
 export const TransferDiv = styled.div`
   display: flex;
   align-items: center;
+  width: 100%;
   justify-content: space-between;
   & > *:not(:last-child) {
     margin-right: 10px;
