@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 // @import wallet connection
 import Web3 from "web3";
 import { EthereumContext } from "./context/EthereumContext";
+// @import css
+import "./App.css";
 // @import pages
 const MintPage = React.lazy(() => import("./pages/Mint"));
 
