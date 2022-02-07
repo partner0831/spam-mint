@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 // @import wallet connection
 import { useEthContext } from "../../context/EthereumContext";
 // @import style
-import { BtnGroup, MintButton, MintContainer, MintText } from "./style";
+import {
+  BtnGroup,
+  MintButton,
+  MintContainer,
+  MintText,
+} from "../../styles/Mint/style";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 

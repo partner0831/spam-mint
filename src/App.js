@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 // @import wallet connection
 import Web3 from "web3";
 import { EthereumContext } from "./context/EthereumContext";
-import { MoralisProvider } from "react-moralis";
 // @import pages
 const MintPage = React.lazy(() => import("./pages/Mint"));
 
@@ -55,29 +54,24 @@ function App() {
   };
 
   return (
-    <MoralisProvider
-      appId="j2ObaAD0Fj5oZwcJhPpYJHb0KoGtKsZTEtntwMqm"
-      serverUrl="https://ms9clnoiekd9.usemoralis.com:2053/server"
+    <EthereumContext.Provider
+      value={{
+        provider,
+        accounts,
+        web3,
+        currentAcc,
+      }}
     >
-      <EthereumContext.Provider
-        value={{
-          provider,
-          accounts,
-          web3,
-          currentAcc,
-        }}
-      >
-        <Suspense fallback={<div />}>
-          <Router>
-            <Switch>
-              <Route exact path="/">
-                <MintPage />
-              </Route>
-            </Switch>
-          </Router>
-        </Suspense>
-      </EthereumContext.Provider>
-    </MoralisProvider>
+      <Suspense fallback={<div />}>
+        <Router>
+          <Switch>
+            <Route exact path="/">
+              <MintPage />
+            </Route>
+          </Switch>
+        </Router>
+      </Suspense>
+    </EthereumContext.Provider>
   );
 }
 
