@@ -57,12 +57,9 @@ module.exports = {
         );
       },
       network_id: 3,
-      numberOfAddresses: 1,
-      gas: 3502000,
-      gasPrice: 1500001236,
-      networkCheckTimeout: 1000000,
+
+      networkCheckTimeout: 999999,
       timeoutBlocks: 200,
-      gasLimit: 8000000,
     },
     testnet: {
       provider: () =>
