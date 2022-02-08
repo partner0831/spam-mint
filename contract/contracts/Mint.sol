@@ -11,20 +11,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract MintContract is ERC721, Ownable {
     uint256 total_supply = 0;
     mapping (address => uint) ownwallet;
-    uint256 startTime;
-    uint256 duration = 4 hours;
     constructor() ERC721("HERO", "HER") {}
 
-    modifier duringMintTime() {
-        require(block.timestamp >= startTime && block.timestamp <= startTime + duration, "It's not mint time");
-        _;
-    }
-
-    function mintNFT ( uint _count ) external payable duringMintTime{
+    function mintNFT ( uint _count ) external payable{
         require(address(this).balance > 0,"Not enough ETH");
-        require(total_supply + _count <= 8888, "Can't mint anymore");
-        require(msg.value == .1 ether * _count,"Not match balance");
-        require(ownwallet[msg.sender] + _count <= 6,"Maxium is 6");
+        require(total_supply + _count <= 7777, "Can't mint anymore");
+        require(msg.value == .05 ether * _count,"Not match balance");
+        require(ownwallet[msg.sender] + _count <= 5,"Maxium is 5");
         
         for( uint i = 0; i < _count; i++ ) {
             total_supply++;
@@ -32,22 +25,11 @@ contract MintContract is ERC721, Ownable {
         }
     }
 
-    function setMintTime( uint256 _startTime ) external onlyOwner {
-        startTime = _startTime;
-    }
-
-    function setMintTimeTest( ) external onlyOwner {
-        startTime = block.timestamp;
-    }
 
     function getRestSupply() external view returns (uint256) {
         return total_supply;
     }
 
-    function getMintTime() external view returns (uint256) {
-        return startTime;
-    }
-  
     function withdraw() external onlyOwner {
         address  _owner = owner();
         payable(_owner).transfer( address(this).balance );

