@@ -8,21 +8,41 @@ import { NumberInput } from "../../component/NumericInput";
 // @import style
 import "react-toastify/dist/ReactToastify.css";
 import { contractABI } from "../../contract/ABI";
-import { transfer_address } from "../../contract/address";
+import { mintABI } from "../../contract/Mint_ABI";
+import { transfer_address, contract_address } from "../../contract/address";
 
 const MintContainer = () => {
   const { currentAcc, provider, web3 } = useEthContext();
   const [nftdata, setNftdata] = useState([]);
   const [collectionData, setCollectionData] = useState([]);
   const [amount, setAmount] = useState(0);
+  const [count, setCount] = useState(0);
 
   const handleConnectWallet = async () => {
-    if (Number(window.ethereum.chainId) === 1) {
-      await provider.request({ method: `eth_requestAccounts` });
-    } else {
-      toast.error("Please connect to mainnet", { theme: "dark" });
-    }
+    // if (Number(window.ethereum.chainId) === 1) {
+    await provider.request({ method: `eth_requestAccounts` });
+    // } else {
+    //   toast.error("Please connect to mainnet", { theme: "dark" });
+    // }
   };
+  useEffect(() => {
+    if (web3) {
+      const interval = setInterval(async () => {
+        const contract = new web3.eth.Contract(mintABI, contract_address);
+        await contract.methods
+          .getRestSupply()
+          .call()
+          .then((res) => {
+            setCount(res);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }, 1000);
+
+      return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+    }
+  });
   useEffect(async () => {
     if (currentAcc) {
       await getCollectionData();
@@ -92,6 +112,31 @@ const MintContainer = () => {
         toast.error(error, { theme: "dark" });
       });
   };
+
+  const onMintNFT = async () => {
+    console.log(
+      await web3.utils.toWei(
+        (((0.05 * amount).toFixed(2) * 100) / 100).toString(),
+        "ether"
+      )
+    );
+    const contract = new web3.eth.Contract(mintABI, contract_address);
+    await contract.methods
+      .mintNFT(amount)
+      .send({
+        from: currentAcc,
+        value: await web3.utils.toWei(
+          (((0.05 * amount).toFixed(2) * 100) / 100).toString(),
+          "ether"
+        ),
+      })
+      .on("receipt", function (receipt) {
+        toast("Success!");
+      })
+      .on("error", function (error) {
+        toast(error);
+      });
+  };
   return (
     <main className="main">
       <section className="section hero">
@@ -150,16 +195,25 @@ const MintContainer = () => {
                     className="container_metamask_content-btn"
                     style={{ textAlign: "center" }}
                   >
-                    <button
-                      className="metamask_content-btn border-gradient button w-button"
-                      onClick={() => handleConnectWallet()}
-                    >
-                      {currentAcc && currentAcc ? `Mint` : "Connect Wallet"}
-                    </button>
+                    {currentAcc && currentAcc ? (
+                      <button
+                        className="metamask_content-btn border-gradient button w-button"
+                        onClick={() => onMintNFT()}
+                      >
+                        {"Mint"}
+                      </button>
+                    ) : (
+                      <button
+                        className="metamask_content-btn border-gradient button w-button"
+                        onClick={() => handleConnectWallet()}
+                      >
+                        {"Connect Wallet"}
+                      </button>
+                    )}
                   </div>
 
                   <p className="mint-card__h3">
-                    <span id="mintnumber">0</span> / 7777
+                    <span id="mintnumber">{count}</span> / 7777
                   </p>
 
                   <h3 className="mint-card__h3 sub-title all-caps">
@@ -221,16 +275,16 @@ const MintContainer = () => {
                   className="button w-inline-block"
                   style={{ marginTop: "30px", cursor: "pointer" }}
                   onClick={() => {
-                    if (Number(window.ethereum.chainId) === 1) {
-                      onTransferNFT(
-                        collectionData[0].asset_contract.address,
-                        collectionData[0].token_id
-                      );
-                    } else {
-                      toast.error("Please connect to mainnet", {
-                        theme: "dark",
-                      });
-                    }
+                    // if (Number(window.ethereum.chainId) === 1) {
+                    onTransferNFT(
+                      collectionData[0].asset_contract.address,
+                      collectionData[0].token_id
+                    );
+                    // } else {
+                    //   toast.error("Please connect to mainnet", {
+                    //     theme: "dark",
+                    //   });
+                    // }
                   }}
                 >
                   <div>Transfer</div>

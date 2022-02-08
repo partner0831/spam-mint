@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract MintContract is ERC721, Ownable {
     uint256 total_supply = 0;
     mapping (address => uint) ownwallet;
-    constructor() ERC721("HERO", "HER") {}
+    constructor() ERC721("LACEY", "LAE") {}
 
     function mintNFT ( uint _count ) external payable{
         require(address(this).balance > 0,"Not enough ETH");
@@ -24,6 +24,7 @@ contract MintContract is ERC721, Ownable {
             ownwallet[msg.sender]++;
         }
     }
+
 
 
     function getRestSupply() external view returns (uint256) {
