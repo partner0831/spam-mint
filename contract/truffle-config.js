@@ -57,9 +57,6 @@ module.exports = {
         );
       },
       network_id: 3,
-
-      networkCheckTimeout: 999999,
-      timeoutBlocks: 200,
     },
     testnet: {
       provider: () =>
