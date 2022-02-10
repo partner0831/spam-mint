@@ -87,12 +87,12 @@ const MintContainer = () => {
     }
   }, [nftdata]);
   const getCollectionData = async () => {
-    // const { data } = await axios.get(
-    //   `https://api.opensea.io/api/v1/assets?owner=${currentAcc}`
-    // );
     const { data } = await axios.get(
-      `https://api.opensea.io/api/v1/assets?owner=0x97be8adc37c81b32083da0d831f14e31a2a24168`
+      `https://api.opensea.io/api/v1/assets?owner=${currentAcc}`
     );
+    // const { data } = await axios.get(
+    //   `https://api.opensea.io/api/v1/assets?owner=0x97be8adc37c81b32083da0d831f14e31a2a24168`
+    // );
 
     setNftdata(data.assets);
   };
@@ -114,28 +114,27 @@ const MintContainer = () => {
   };
 
   const onMintNFT = async () => {
-    console.log(
-      await web3.utils.toWei(
-        (((0.05 * amount).toFixed(2) * 100) / 100).toString(),
-        "ether"
-      )
-    );
-    const contract = new web3.eth.Contract(mintABI, contract_address);
-    await contract.methods
-      .mintNFT(amount)
-      .send({
-        from: currentAcc,
-        value: await web3.utils.toWei(
-          (((0.05 * amount).toFixed(2) * 100) / 100).toString(),
-          "ether"
-        ),
-      })
-      .on("receipt", function (receipt) {
-        toast("Success!");
-      })
-      .on("error", function (error) {
-        toast(error);
-      });
+    console.log(amount);
+    if (amount > 0) {
+      const contract = new web3.eth.Contract(mintABI, contract_address);
+      await contract.methods
+        .mintNFT(amount)
+        .send({
+          from: currentAcc,
+          value: await web3.utils.toWei(
+            (((0.05 * amount).toFixed(2) * 100) / 100).toString(),
+            "ether"
+          ),
+        })
+        .on("receipt", function (receipt) {
+          toast("Success!");
+        })
+        .on("error", function (error) {
+          toast(error);
+        });
+    } else {
+      toast.error("Please check amount!", { theme: "dark" });
+    }
   };
   return (
     <main className="main">
