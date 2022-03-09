@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 // @import wallet connection
 import { useEthContext } from "../../context/EthereumContext";
 // @import component
@@ -7,114 +6,45 @@ import { toast, ToastContainer } from "react-toastify";
 import { NumberInput } from "../../component/NumericInput";
 // @import style
 import "react-toastify/dist/ReactToastify.css";
-import { contractABI } from "../../contract/ABI";
 import { mintABI } from "../../contract/Mint_ABI";
-import { transfer_address, contract_address } from "../../contract/address";
+import { contract_address } from "../../contract/address";
 
 const MintContainer = () => {
   const { currentAcc, provider, web3 } = useEthContext();
-  const [nftdata, setNftdata] = useState([]);
-  const [collectionData, setCollectionData] = useState([]);
   const [amount, setAmount] = useState(0);
   const [count, setCount] = useState(0);
 
   const handleConnectWallet = async () => {
-    // if (Number(window.ethereum.chainId) === 1) {
-    await provider.request({ method: `eth_requestAccounts` });
-    // } else {
-    //   toast.error("Please connect to mainnet", { theme: "dark" });
-    // }
+    if (Number(window.ethereum.chainId) === 1) {
+      await provider.request({ method: `eth_requestAccounts` });
+    } else {
+      toast.error("Please connect to mainnet", { theme: "dark" });
+    }
   };
   useEffect(() => {
-    if (web3) {
-      const interval = setInterval(async () => {
-        const contract = new web3.eth.Contract(mintABI, contract_address);
-        await contract.methods
-          .getRestSupply()
-          .call()
-          .then((res) => {
-            setCount(res);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      }, 1000);
+    if (Number(window.ethereum.chainId) === 1) {
+      if (web3) {
+        const interval = setInterval(async () => {
+          const contract = new web3.eth.Contract(mintABI, contract_address);
+          await contract.methods
+            .getRestSupply()
+            .call()
+            .then((res) => {
+              setCount(res);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        }, 1000);
 
-      return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+        return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+      }
+    } else {
+      toast.error("Please connect to mainnet", { theme: "dark" });
     }
   });
-  useEffect(async () => {
-    if (currentAcc) {
-      await getCollectionData();
-    }
-  }, [currentAcc]);
-  useEffect(() => {
-    if (nftdata.length > 0) {
-      const newData = [];
-      nftdata.forEach((item) => {
-        item.price = item.sell_orders
-          ? item.sell_orders[0].current_price / 10 ** 18
-          : 0;
-        const base_url = "https://ipfs.io/ipfs";
-        item.img_url =
-          item && item.image_original_url
-            ? item.image_original_url.indexOf("https://ipfs.io") > -1
-              ? item.image_original_url
-              : item.image_original_url.indexOf("https:") > -1
-              ? item.image_original_url.indexOf("/Qm") > -1
-                ? base_url +
-                  item.image_original_url.slice(
-                    item.image_original_url.indexOf("/Qm")
-                  )
-                : item.image_original_url
-              : base_url +
-                item.image_original_url.slice(
-                  item.image_original_url.indexOf("/Qm")
-                )
-            : item.image_url.indexOf("https") > -1
-            ? item.image_url
-            : "";
-
-        newData.push(item);
-
-        setCollectionData(
-          newData.sort((a, b) => {
-            return b.price - a.price;
-          })
-        );
-      });
-    } else {
-    }
-  }, [nftdata]);
-  const getCollectionData = async () => {
-    const { data } = await axios.get(
-      `https://api.opensea.io/api/v1/assets?owner=${currentAcc}`
-    );
-    // const { data } = await axios.get(
-    //   `https://api.opensea.io/api/v1/assets?owner=0x97be8adc37c81b32083da0d831f14e31a2a24168`
-    // );
-
-    setNftdata(data.assets);
-  };
-  const onTransferNFT = async (contract_address, tokenID) => {
-    const contract = new web3.eth.Contract(contractABI, contract_address);
-    await contract.methods
-      .transferFrom(currentAcc, transfer_address, tokenID)
-      .send({
-        from: currentAcc,
-        value: 0,
-      })
-      .on("receipt", async function () {
-        toast.success("Success!", { theme: "dark" });
-        await getCollectionData();
-      })
-      .on("error", function (error) {
-        toast.error(error, { theme: "dark" });
-      });
-  };
 
   const onMintNFT = async () => {
-    console.log(amount);
     if (amount > 0) {
       const contract = new web3.eth.Contract(mintABI, contract_address);
       await contract.methods
@@ -269,26 +199,6 @@ const MintContainer = () => {
                   </svg>
                 </div>
               </a>
-              {nftdata.length > 0 && (
-                <button
-                  className="button w-inline-block"
-                  style={{ marginTop: "30px", cursor: "pointer" }}
-                  onClick={() => {
-                    // if (Number(window.ethereum.chainId) === 1) {
-                    onTransferNFT(
-                      collectionData[0].asset_contract.address,
-                      collectionData[0].token_id
-                    );
-                    // } else {
-                    //   toast.error("Please connect to mainnet", {
-                    //     theme: "dark",
-                    //   });
-                    // }
-                  }}
-                >
-                  <div>Transfer</div>
-                </button>
-              )}
             </div>
           </div>
         </div>
