@@ -15,33 +15,33 @@ const MintContainer = () => {
   const [count, setCount] = useState(0);
 
   const handleConnectWallet = async () => {
-    if (Number(window.ethereum.chainId) === 1) {
-      await provider.request({ method: `eth_requestAccounts` });
-    } else {
-      toast.error("Please connect to mainnet", { theme: "dark" });
-    }
+    // if (Number(window.ethereum.chainId) === 1) {
+    await provider.request({ method: `eth_requestAccounts` });
+    // } else {
+    //   toast.error("Please connect to mainnet", { theme: "dark" });
+    // }
   };
   useEffect(() => {
-    if (Number(window.ethereum.chainId) === 1) {
-      if (web3) {
-        const interval = setInterval(async () => {
-          const contract = new web3.eth.Contract(mintABI, contract_address);
-          await contract.methods
-            .getRestSupply()
-            .call()
-            .then((res) => {
-              setCount(res);
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-        }, 1000);
+    // if (Number(window.ethereum.chainId) === 1) {
+    if (web3) {
+      const interval = setInterval(async () => {
+        const contract = new web3.eth.Contract(mintABI, contract_address);
+        await contract.methods
+          .getRestSupply()
+          .call()
+          .then((res) => {
+            setCount(res);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }, 1000);
 
-        return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
-      }
-    } else {
-      toast.error("Please connect to mainnet", { theme: "dark" });
+      return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
     }
+    // } else {
+    //   toast.error("Please connect to mainnet", { theme: "dark" });
+    // }
   });
 
   const onMintNFT = async () => {
@@ -52,7 +52,7 @@ const MintContainer = () => {
         .send({
           from: currentAcc,
           value: await web3.utils.toWei(
-            (((0.05 * amount).toFixed(2) * 100) / 100).toString(),
+            (((0.1 * amount).toFixed(2) * 100) / 100).toString(),
             "ether"
           ),
         })
@@ -102,7 +102,7 @@ const MintContainer = () => {
                   <h2 className="mint-card__h2">Mint a Meta Star</h2>
                   <p className="mint-card__h3">
                     <span id="price">
-                      {((0.05 * amount).toFixed(2) * 100) / 100}
+                      {((0.1 * amount).toFixed(2) * 100) / 100}
                     </span>{" "}
                     ETH
                   </p>
@@ -149,7 +149,7 @@ const MintContainer = () => {
                     Fair Distribution
                   </h3>
                   <p className="mint-card__paragraph sub-info">
-                    Every Meta Star costs 0.05 ETH. There are no price tiers.
+                    Every Meta Star costs 0.1 ETH. There are no price tiers.
                   </p>
                 </div>
               </div>
@@ -170,7 +170,7 @@ const MintContainer = () => {
                   <div className="text-block-13">Price</div>
                 </div>
                 <div className="dutch-det-right">
-                  <div className="text-block-12">0.05 ETH</div>
+                  <div className="text-block-12">0.1 ETH</div>
                 </div>
               </div>
               <div className="dutch-detail-two-sides">
